@@ -1,3 +1,4 @@
+const orderRoutes = require('./routes/orderRoutes');
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 4002;
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/orders', orderRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
@@ -52,5 +54,6 @@ process.on("SIGTERM", async () => {
     process.exit(1);
   }
 });
+
 
 module.exports = app;
