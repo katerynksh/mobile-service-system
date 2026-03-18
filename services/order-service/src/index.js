@@ -7,7 +7,7 @@ const pool = require("./db/pool");
 const { initOrderSchema } = require("./db/init");
 
 const app = express();
-const PORT = process.env.PORT || 4002;
+const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
