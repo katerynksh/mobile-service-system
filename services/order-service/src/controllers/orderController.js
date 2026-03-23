@@ -1,29 +1,107 @@
-const Order = require('../models/Order');
+const { OrderModel, VALID_STATUSES } = require('../models/Order');
 
-exports.getAllOrders = async (req, res) => {
+const getAvailableOrders = async (req, res) => {
   try {
-    const orders = await Order.findAll();
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ error: 'Error retrieving order list' });
+    const { sortBy, sortDir } = req.query;
+
+    const orders = await OrderModel.findAll({ 
+      status: 'CREATED', 
+      sortBy: sortBy || 'created_at', 
+      sortDir: sortDir || 'ASC' 
+    });
+
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    console.error('Error in getAvailableOrders:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
-exports.updateStatus = async (req, res) => {
-  const { id } = req.params; // ID з URL
-  const { status, comment } = req.body; // новий статус і коментар з тіла запиту
-  
-  const masterId = req.user?.id || '00000000-0000-0000-0000-000000000000'; 
-
+const acceptOrder = async (req, res) => {
   try {
-    const updatedOrder = await Order.updateStatus(id, masterId, status, comment);
-    
-    if (!updatedOrder) {
-      return res.status(404).json({ error: 'Order not found' });
+    const orderId = req.params.id;
+    const masterId = req.user.id; 
+
+    // Спочатку перевіряємо, чи існує замовлення і чи воно досі вільне
+    const order = await OrderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
     }
-    
-    res.json(updatedOrder);
-  } catch (err) {
-    res.status(500).json({ error: 'Error updating status' });
+
+    if (order.status !== 'CREATED') {
+      return res.status(409).json({ success: false, message: 'Order is already taken or cancelled' });
+    }
+
+    const updatedOrder = await OrderModel.update(orderId, {
+      status: 'ASSIGNED',
+      assigned_to: masterId
+    });
+
+    res.status(200).json({ success: true, data: updatedOrder });
+  } catch (error) {
+    console.error('Error in acceptOrder:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
+};
+
+const updateOrderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const masterId = req.user.id;
+    const { status, technician_comment } = req.body; 
+
+    // Валідація статусу
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status provided' });
+    }
+
+    const order = await OrderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // КЛЮЧОВА ПЕРЕВІРКА: чи це замовлення належить цьому майстру?
+    if (order.assigned_to !== masterId) {
+      return res.status(403).json({ success: false, message: 'Forbidden: You can only update your own orders' });
+    }
+
+    // Формуємо об'єкт для оновлення (щоб не перезаписати зайвого)
+    const updates = { status };
+    if (technician_comment !== undefined) {
+      updates.technician_comment = technician_comment;
+    }
+
+    const updatedOrder = await OrderModel.update(orderId, updates);
+
+    res.status(200).json({ success: true, data: updatedOrder });
+  } catch (error) {
+    console.error('Error in updateOrderStatus:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+const getMyWorkOrders = async (req, res) => {
+  try {
+    const masterId = req.user.id;
+
+    const orders = await OrderModel.findAll({ 
+      assignedTo: masterId,
+      sortBy: 'created_at',
+      sortDir: 'DESC' 
+    });
+
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    console.error('Error in getMyWorkOrders:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+module.exports = {
+  getAvailableOrders,
+  acceptOrder,
+  updateOrderStatus,
+  getMyWorkOrders
 };

@@ -1,6 +1,8 @@
 const { Pool } = require('pg');
+require("dotenv").config();
+const DATABASE_URL = process.env.DATABASE_URL
+const PGSSL = process.env.PGSSL;
 
-const { DATABASE_URL, PGSSL } = process.env;
 if (!DATABASE_URL) {
   throw new Error('DATABASE_URL is required');
 }

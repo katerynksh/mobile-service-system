@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { orderAPI } from '../../lib/api';
 
 export default function MasterPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const [availableOrders, setAvailableOrders] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!loading) {
@@ -20,6 +23,34 @@ export default function MasterPage() {
   const handleLogout = async () => {
     await logout();
     router.replace("/");
+  };
+
+  useEffect(() => {
+    loadAvailableOrders();
+  }, []);
+
+  const loadAvailableOrders = async () => {
+    try {
+      const response = await orderAPI.getAvailableOrders();
+      if (response.success) {
+        setAvailableOrders(response.data);
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError('Can`t load an order');
+    }
+  };
+
+  const handleAcceptOrder = async (orderId) => {
+    const response = await orderAPI.acceptOrder(orderId);
+    
+    if (response.success) {
+      alert('You successfully took an order');
+      loadAvailableOrders();
+    } else {
+      alert(`Error: ${response.message}`);
+    }
   };
 
   return (
@@ -127,6 +158,17 @@ export default function MasterPage() {
               lineHeight: 1.6,
             }}
           >
+            <h2>Avaible orders</h2>
+              <ul>
+                {availableOrders.map(order => (
+                  <li key={order.id}>
+                    {order.device_type} {order.device_model} — {order.issue_description}
+                    <button onClick={() => handleAcceptOrder(order.id)}>
+                      Take to work
+                    </button>
+                  </li>
+                ))}
+              </ul>
             Welcome, <strong>{user.username}</strong>! Order management and
             status updates will appear here. This section is coming soon.
           </p>

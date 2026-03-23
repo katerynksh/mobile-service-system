@@ -26,6 +26,8 @@ class AuthAPI {
     return res.json();
   }
 
+  
+
   async register(username, password) {
     const csrfToken = getCsrfToken();
     const res = await fetch(`${API_URL}/api/auth/register`, {
@@ -77,4 +79,67 @@ class AuthAPI {
   }
 }
 
+class OrderAPI {
+  constructor() {
+    this.baseURL = '/api/orders';
+  }
+
+  getHeaders(isMutableRequest = false) {
+    const token = localStorage.getItem('accessToken'); 
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` 
+    };
+
+    if (isMutableRequest) {
+      headers['x-csrf-token'] = getCsrfToken();
+    }
+
+    return headers;
+  }
+
+  async getAvailableOrders() {
+    const res = await fetch(`${this.baseURL}/available`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+      credentials: 'include' 
+    });
+    return res.json();
+  }
+
+  async getMyWorkOrders() {
+    const res = await fetch(`${this.baseURL}/my-work`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+      credentials: 'include'
+    });
+    return res.json();
+  }
+
+  async acceptOrder(orderId) {
+    const res = await fetch(`${this.baseURL}/${orderId}/accept`, {
+      method: 'PATCH',
+      headers: this.getHeaders(true), 
+      credentials: 'include'
+    });
+    return res.json();
+  }
+
+  async updateOrderStatus(orderId, status, technician_comment = undefined) {
+    const bodyData = { status };
+    if (technician_comment) {
+      bodyData.technician_comment = technician_comment;
+    }
+
+    const res = await fetch(`${this.baseURL}/${orderId}/status`, {
+      method: 'PATCH',
+      headers: this.getHeaders(true),
+      credentials: 'include',
+      body: JSON.stringify(bodyData)
+    });
+    return res.json();
+  }
+}
+
+export const orderAPI = new OrderAPI();
 export const authAPI = new AuthAPI();

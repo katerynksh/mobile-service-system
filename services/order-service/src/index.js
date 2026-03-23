@@ -1,4 +1,3 @@
-const orderRoutes = require('./routes/orderRoutes');
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -6,12 +5,14 @@ require("dotenv").config();
 const pool = require("./db/pool");
 const { initOrderSchema } = require("./db/init");
 
+const orderRoutes = require('./routes/orderRoutes');
 const app = express();
 const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
 app.use('/api/orders', orderRoutes);
+app.use('/', orderRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
