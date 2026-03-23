@@ -1,12 +1,12 @@
 const pool = require('../db/pool');
 
 const VALID_STATUSES = [
-  'CREATED',
-  'ASSIGNED',
-  'IN_PROGRESS',
-  'FIXED',
-  'COMPLETED',
-  'CANCELLED'
+  'new', 
+  'in progress', 
+  'waiting customer response',
+  'waiting spare parts',
+  'failed',
+  'done'
 ];
 
 class OrderModel {

@@ -5,7 +5,7 @@ const getAvailableOrders = async (req, res) => {
     const { sortBy, sortDir } = req.query;
 
     const orders = await OrderModel.findAll({ 
-      status: 'CREATED', 
+      status: 'new', 
       sortBy: sortBy || 'created_at', 
       sortDir: sortDir || 'ASC' 
     });
@@ -22,14 +22,14 @@ const acceptOrder = async (req, res) => {
     const orderId = req.params.id;
     const masterId = req.user.id; 
 
-    // Спочатку перевіряємо, чи існує замовлення і чи воно досі вільне
+    //перевіряємо, чи існує замовлення і чи воно досі вільне
     const order = await OrderModel.findById(orderId);
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    if (order.status !== 'CREATED') {
+    if (order.status !== 'new') {
       return res.status(409).json({ success: false, message: 'Order is already taken or cancelled' });
     }
 
@@ -51,7 +51,7 @@ const updateOrderStatus = async (req, res) => {
     const masterId = req.user.id;
     const { status, technician_comment } = req.body; 
 
-    // Валідація статусу
+    // валідація статусу
     if (!status || !VALID_STATUSES.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status provided' });
     }
@@ -62,12 +62,12 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // КЛЮЧОВА ПЕРЕВІРКА: чи це замовлення належить цьому майстру?
+    // !! чи це замовлення належить цьому майстру?
     if (order.assigned_to !== masterId) {
       return res.status(403).json({ success: false, message: 'Forbidden: You can only update your own orders' });
     }
 
-    // Формуємо об'єкт для оновлення (щоб не перезаписати зайвого)
+    // формуємо об'єкт для оновлення (щоб не перезаписати зайвого)
     const updates = { status };
     if (technician_comment !== undefined) {
       updates.technician_comment = technician_comment;

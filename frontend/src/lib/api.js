@@ -80,9 +80,7 @@ class AuthAPI {
 }
 
 class OrderAPI {
-  constructor() {
-    this.baseURL = '/api/orders';
-  }
+  constructor() {this.baseURL = `${API_URL}/api/orders`};
 
   getHeaders(isMutableRequest = false) {
     const token = localStorage.getItem('accessToken'); 

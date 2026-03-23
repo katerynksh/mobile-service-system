@@ -158,7 +158,7 @@ export default function MasterPage() {
               lineHeight: 1.6,
             }}
           >
-            <h2>Avaible orders</h2>
+            <h2>Available orders</h2>
               <ul>
                 {availableOrders.map(order => (
                   <li key={order.id}>

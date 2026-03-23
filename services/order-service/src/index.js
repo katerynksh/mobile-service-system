@@ -12,7 +12,7 @@ const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.json());
 app.use('/api/orders', orderRoutes);
-app.use('/', orderRoutes);
+// app.use('/', orderRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
