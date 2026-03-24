@@ -159,6 +159,7 @@ export default function MasterPage() {
             }}
           >
             <h2>Available orders</h2>
+            </p>
               <ul>
                 {availableOrders.map(order => (
                   <li key={order.id}>
@@ -169,6 +170,7 @@ export default function MasterPage() {
                   </li>
                 ))}
               </ul>
+              <p>
             Welcome, <strong>{user.username}</strong>! Order management and
             status updates will appear here. This section is coming soon.
           </p>
